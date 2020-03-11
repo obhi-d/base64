@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(base64 VERSION 0.0.1 LANGUAGES C)
+project(base64 VERSION 0.0.1)
 
 
 
@@ -19,6 +19,7 @@ option(HAVE_NEON64 "Build neon64" OFF)
 ## TARGET
 ##
 message("Target name: ${BASE64_TARGET_NAME}")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_library(${BASE64_TARGET_NAME} STATIC
   lib/arch/avx2/codec.c
   lib/arch/generic/codec.c
@@ -39,6 +40,19 @@ target_include_directories(
     PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+set(C_FLAGS "")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(C_FLAGS "-msse3;-mssse3;-mavx")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set(C_FLAGS "-msse3;-mssse3;-mavx")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+  set(C_FLAGS "-msse3;-mssse3;-mavx")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  set(C_FLAGS "/arch:AVX")
+endif()
+
+target_compile_options(${BASE64_TARGET_NAME} PRIVATE ${C_FLAGS})
 
 # INSTALL
 install(TARGETS ${PROJECT_NAME}
